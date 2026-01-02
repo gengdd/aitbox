@@ -1,0 +1,10 @@
+
+_target_: "tests.config.machine.Machine"
+
+gpu:
+  _target_: "tests.config.machine.GPUInfo"
+  name: kunlun
+  # cuda: flase
+cpu:
+  _target_: "tests.config.machine.CPUInfo"
+  name: apple
