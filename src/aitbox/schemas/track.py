@@ -26,7 +26,7 @@ class CoordinateType(Enum):
 
 @dataclass(frozen=True)
 class CoordinateSpec:
-    columns: Tuple[str, str, str]
+    columns: Tuple[str, str, str, str]
     unit: str
     description: str
     epsg: int | None = None
@@ -34,19 +34,19 @@ class CoordinateSpec:
 
 COORDINATE_SPECS = {
     CoordinateType.EUCLIDEAN: CoordinateSpec(
-        columns=("x", "y", "time"),
+        columns=("track_id", "x", "y", "time"),
         unit="meter",
         description="Local 2D Cartesian coordinate",
         epsg=None,
     ),
     CoordinateType.WGS84: CoordinateSpec(
-        columns=("lon", "lat", "time"),
+        columns=("track_id", "lon", "lat", "time"),
         unit="degree",
         description="WGS84 geographic coordinate",
         epsg=4326,
     ),
     CoordinateType.BD09: CoordinateSpec(
-        columns=("lon", "lat", "time"),
+        columns=("track_id", "lon", "lat", "time"),
         unit="degree",
         description="Baidu BD09 coordinate",
         epsg=None,
@@ -59,6 +59,7 @@ class TrackBase:
     """ """
     data: pd.DataFrame | pl.DataFrame
     coord_type: CoordinateType
+    time_format: str | None = None
 
     @abstractmethod
     def __post_init__(self):
@@ -66,7 +67,12 @@ class TrackBase:
         ...
 
     @property
-    def required_columns(self) -> CoordinateSpec:
+    def required_columns(self) -> tuple:
+        """ """
+        return COORDINATE_SPECS[self.coord_type].columns
+
+    @property
+    def coordinate_specs(self) -> CoordinateSpec:
         """ """
         return COORDINATE_SPECS[self.coord_type]
 
@@ -84,7 +90,18 @@ class TrackPl(TrackBase):
     """ """
 
     def __post_init__(self):
-        pass
+        self._validate_columns()
+
+    def _validate_columns(self):
+        """ """
+        required = set(self.required_columns)
+        existing = set(self.data.columns)
+
+        missing = required - existing
+        if missing:
+            raise ValueError(
+                f"Missing required columns: {sorted(missing)}"
+            )
 
 
 TRACK_BACKEND = {

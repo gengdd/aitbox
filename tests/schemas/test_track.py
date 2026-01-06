@@ -7,6 +7,8 @@ Author      : gdd
 Created     : 2026/1/5
 Description :
 """
+import pytest
+
 import pandas as pd
 import polars as pl
 
@@ -21,6 +23,7 @@ def test_track_pd():
                 "time": [0, 1, 2],
                 "x": [0.0, 1.0, 2.0],
                 "y": [0.0, 1.0, 2.0],
+                "track_id": [0, 0, 0]
             }
         ),
         coord_type=CoordinateType.EUCLIDEAN,
@@ -40,6 +43,7 @@ def test_track_pl():
                 "time": [0, 1, 2],
                 "x": [0.0, 1.0, 2.0],
                 "y": [0.0, 1.0, 2.0],
+                "track_id": [0, 0, 0]
             }
         ),
         coord_type=CoordinateType.EUCLIDEAN,
@@ -47,3 +51,19 @@ def test_track_pl():
 
     assert isinstance(track, TrackPl)
     assert track.coord_type == CoordinateType.EUCLIDEAN
+
+
+def test_track_pl_columns():
+    """ """
+    set_track_backend("polars")
+
+    with pytest.raises(ValueError, match="Missing required columns"):
+        Track(
+            data=pl.DataFrame(
+                {
+                    "x": [0.0, 1.0, 2.0],
+                    "y": [0.0, 1.0, 2.0],
+                }
+            ),
+            coord_type=CoordinateType.EUCLIDEAN,
+        )
